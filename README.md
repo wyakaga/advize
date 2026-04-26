@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AdVize 📊
 
-## Getting Started
+AdVize is a premium, AI-powered **Ad Optimization Advisor** designed to help marketing teams transform raw campaign data into actionable insights. Built with a focus on speed, precision, and an "Editorial Noir" design aesthetic, AdVize streamlines the path from performance tracking to strategic decision-making.
 
-First, run the development server:
+## ✨ Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **📊 Comprehensive Dashboard**: Global aggregate metrics (Impressions, Clicks, Conversions, Cost) and interactive performance charts.
+- **🚀 AI Analysis Engine**: Intelligent, Qwen-powered analysis of your campaign data to identify bottlenecks and optimization opportunities.
+- **📁 Multi-Channel Import**: Add campaigns manually via a high-fidelity form or bulk-upload performance data using CSV files.
+- **📅 Historical Archive**: Fully searchable and paginated history of all generated analysis reports.
+- **📄 PDF Export**: Export professionally formatted analysis reports for easy sharing with stakeholders.
+- **🔒 Secure Authentication**: Robust session management and user-specific data isolation.
+- **📱 Fully Responsive**: A seamless, touch-optimized experience tailored for desktop, tablet, and mobile devices.
+
+## 🛠 Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **UI Library**: [HeroUI](https://heroui.com/) & [Tailwind CSS v4](https://tailwindcss.com/)
+- **Database**: [Prisma](https://www.prisma.io/) with PostgreSQL
+- **AI Integration**: [SumoPod AI](https://sumopod.com/) (Qwen 2.5)
+- **Charts**: [Recharts](https://recharts.org/)
+- **State Management**: [React Query](https://tanstack.com/query/latest) & [React Context](https://react.dev/learn/passing-data-deeply-with-context)
+- **Export**: [@react-pdf/renderer](https://react-pdf.org/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL database
+- Environment variables (see `.env.example`)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/wyakaga/advize.git
+   cd advize
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables:**
+   Create a `.env` file in the root directory and add your credentials:
+   ```env
+   DATABASE_URL="postgresql://..."
+   NEXTAUTH_SECRET="..."
+   NEXTAUTH_URL="..."
+   GOOGLE_CLIENT_ID="..."
+   GOOGLE_CLIENT_SECRET="..."
+   SUMOPOD_API_KEY="..."
+   ```
+
+4. **Initialize the database:**
+   ```bash
+   npx prisma db push
+   ```
+
+5. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎨 Design Philosophy: Editorial Noir
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+AdVize follows an **Editorial Noir** aesthetic—a design system characterized by:
+- **High Contrast**: Deep blacks and off-whites for maximum readability and visual impact.
+- **Accented Elegance**: Subtle use of primary coral tones for calls to action.
+- **Ample Whitespace**: Giving data "room to breathe" to reduce cognitive load.
+- **Refined Typography**: Purposeful use of font weights and hierarchy to guide the user's eye.
 
-## Learn More
+## 🤝 Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome! Please feel free to submit a Pull Request or open an issue for any bugs or feature requests.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📄 License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
