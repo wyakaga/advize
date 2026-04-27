@@ -183,7 +183,7 @@ export function CampaignTable({
   });
 
   return (
-    <div className="card flex flex-col gap-4">
+    <div className="campaign-table card flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative max-w-sm flex-1">
           <Search

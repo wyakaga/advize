@@ -11,11 +11,12 @@ import {
   Upload,
   History,
   LogOut,
-  BarChart3,
   Menu,
   X,
+  BarChart3,
 } from "lucide-react";
 import { redirect } from "next/navigation";
+import OnboardingTour from "@/components/OnboardingTour";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -64,7 +65,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           <h1 className="font-jkt font-bold text-xl leading-none">AdVize</h1>
         </div>
 
-        <nav className="">
+        <nav className="nav-menu">
           <ul className="flex gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -133,7 +134,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         }}
       >
         <button
-          className="btn-icon"
+          className="btn-icon nav-menu"
           onClick={() => setIsMenuOpen(true)}
           aria-label="Open menu"
         >
@@ -238,6 +239,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">{children}</div>
       </main>
+      <OnboardingTour />
     </div>
   );
 }
