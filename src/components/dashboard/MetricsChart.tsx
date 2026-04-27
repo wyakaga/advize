@@ -22,14 +22,17 @@ interface MetricsChartProps {
 }
 
 export function MetricsChart({ data }: MetricsChartProps) {
-  if (data.length === 0) {
-    return null;
-  }
+  const isEmpty = data.length === 0;
 
   return (
     <div className="card">
       <h2 className="text-card-title mb-4">Conversions vs. Cost</h2>
-      <div className="h-80 w-full">
+      <div className="relative h-80 w-full">
+        {isEmpty && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
+            <p className="text-label text-sm">No data available to visualize</p>
+          </div>
+        )}
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}

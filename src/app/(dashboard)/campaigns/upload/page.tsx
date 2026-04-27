@@ -19,6 +19,7 @@ interface CsvRow {
 }
 
 import { useCreateCampaignMutation } from "@/app/services/campaigns";
+import { parseRobustDate } from "@/lib/date";
 
 const REQUIRED_COLUMNS = [
   "name",
@@ -92,6 +93,18 @@ export default function UploadCsvPage() {
           validationErrors.push(
             `Row ${i}: Invalid platform "${platform}". Use: ${VALID_PLATFORMS.join(", ")}`
           );
+          continue;
+        }
+
+        const startDateParsed = parseRobustDate(startDate);
+        const endDateParsed = parseRobustDate(endDate);
+
+        if (isNaN(startDateParsed.getTime())) {
+          validationErrors.push(`Row ${i}: Invalid start date "${startDate}"`);
+          continue;
+        }
+        if (isNaN(endDateParsed.getTime())) {
+          validationErrors.push(`Row ${i}: Invalid end date "${endDate}"`);
           continue;
         }
 

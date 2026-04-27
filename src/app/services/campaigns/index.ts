@@ -1,12 +1,23 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 
 import { createCampaign, deleteCampaign, getCampaigns } from "./rest";
 import { ICreateCampaignPayload } from "@/app/interfaces/campaigns.interface";
 
-export const useGetCampaignsQuery = (page: number = 1, pageSize: number = 10) => {
+export const useGetCampaignsQuery = (
+  page: number = 1,
+  pageSize: number = 10,
+  search: string = "",
+  platform: string = "",
+) => {
   return useQuery({
-    queryKey: ["campaigns", page, pageSize],
-    queryFn: () => getCampaigns(page, pageSize),
+    queryKey: ["campaigns", page, pageSize, search, platform],
+    queryFn: () => getCampaigns(page, pageSize, search, platform),
+    placeholderData: keepPreviousData,
   });
 };
 

@@ -24,7 +24,9 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/pg": "^8.20.0",
     "axios": "^1.15.2",
+    "dayjs": "^1.11.20",
     "framer-motion": "^12.38.0",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^1.11.0",
     "next": "16.2.4",
     "next-auth": "^5.0.0-beta.25",
@@ -41,6 +43,7 @@
     ]
   },
   "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

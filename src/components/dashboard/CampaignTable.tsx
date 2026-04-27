@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, ChevronLeft, ChevronRight, Search, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
+
+const PLATFORMS = ["Facebook", "Google", "TikTok", "LinkedIn"] as const;
 
 export interface CampaignRow {
   id: string;
@@ -28,6 +30,10 @@ interface CampaignTableProps {
   onToggleSelect: (id: string) => void;
   onToggleAll: () => void;
   onDelete: (id: string) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  platform: string;
+  onPlatformChange: (value: string) => void;
   pagination: {
     total: number;
     page: number;
@@ -44,10 +50,30 @@ export function CampaignTable({
   onToggleSelect,
   onToggleAll,
   onDelete,
+  search,
+  onSearchChange,
+  platform,
+  onPlatformChange,
   pagination,
   onPageChange,
   onPageSizeChange,
 }: CampaignTableProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const columns = useMemo<ColumnDef<CampaignRow>[]>(
     () => [
       {
@@ -158,6 +184,86 @@ export function CampaignTable({
 
   return (
     <div className="card flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-sm flex-1">
+          <Search
+            size={16}
+            strokeWidth={1.5}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+            style={{ color: "var(--color-text-secondary)" }}
+          />
+          <input
+            type="text"
+            placeholder="Search campaigns..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="form-input w-full"
+            style={{
+              paddingLeft: "40px",
+              paddingRight: search ? "40px" : "12px",
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => onSearchChange("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-label hover:text-coral transition-colors cursor-pointer"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="relative min-w-48" ref={dropdownRef}>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="form-select flex w-full items-center justify-between gap-2 cursor-pointer"
+          >
+            <span className={platform ? "text-text-primary" : "text-placeholder"}>
+              {platform || "All Platforms"}
+            </span>
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {isDropdownOpen && (
+            <div className="absolute left-0 top-full z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-white py-1 shadow-lg">
+              <button
+                onClick={() => {
+                  onPlatformChange("");
+                  setIsDropdownOpen(false);
+                }}
+                className={`w-full px-4 py-2 text-left text-sm transition-colors cursor-pointer ${
+                  !platform
+                    ? "bg-coral-light text-coral font-medium"
+                    : "hover:bg-coral-light hover:text-coral"
+                }`}
+              >
+                All Platforms
+              </button>
+              {PLATFORMS.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => {
+                    onPlatformChange(p);
+                    setIsDropdownOpen(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm transition-colors cursor-pointer ${
+                    platform === p
+                      ? "bg-coral-light text-coral font-medium"
+                      : "hover:bg-coral-light hover:text-coral"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="data-table">
           <thead>
@@ -210,7 +316,6 @@ export function CampaignTable({
         </table>
       </div>
 
-      {/* Pagination Controls */}
       <div className="flex items-center justify-between border-t border-border-light pt-4">
         <div className="flex items-center gap-4">
           <p className="text-label">

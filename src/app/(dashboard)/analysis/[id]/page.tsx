@@ -28,37 +28,24 @@ interface AnalysisData {
   campaigns: Array<{ id: string; name: string; platform: string }>;
 }
 
+import { useGetAnalysisQuery } from "@/app/services/analysis";
+
 export default function AnalysisDetailPage() {
   const params = useParams();
-  const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const id = params.id as string;
+
   const [isMounted, setIsMounted] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    // Avoid synchronous setState in effect to prevent cascading renders
     const timer = setTimeout(() => setIsMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    async function fetchAnalysis() {
-      try {
-        const res = await fetch(`/api/analysis/${params.id}`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
-        setAnalysis(data);
-      } catch {
-        setError("Analysis not found.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchAnalysis();
-  }, [params.id]);
+  const { data: analysis, isLoading, isError } = useGetAnalysisQuery(id);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Spinner size="lg" color="current" />
@@ -66,14 +53,11 @@ export default function AnalysisDetailPage() {
     );
   }
 
-  if (error || !analysis) {
+  if (isError || !analysis) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p
-          className="text-sm"
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          {error ?? "Something went wrong."}
+        <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+          Analysis not found.
         </p>
         <Link href="/history" className="btn-secondary text-sm">
           Back to History
@@ -97,12 +81,8 @@ export default function AnalysisDetailPage() {
       const doc = (
         <PdfDocument
           summary={suggestions.summary ?? analysis.summary}
-          underperformingCampaigns={
-            suggestions.underperforming_campaigns ?? []
-          }
-          optimizationSuggestions={
-            suggestions.optimization_suggestions ?? []
-          }
+          underperformingCampaigns={suggestions.underperforming_campaigns ?? []}
+          optimizationSuggestions={suggestions.optimization_suggestions ?? []}
           prioritizedActions={suggestions.prioritized_actions ?? []}
           date={dateStr}
         />
@@ -127,7 +107,6 @@ export default function AnalysisDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
@@ -160,7 +139,6 @@ export default function AnalysisDetailPage() {
         )}
       </div>
 
-      {/* Analyzed campaigns */}
       <div className="card">
         <p className="text-label mb-2">
           Campaigns analyzed ({analysis.campaigns.length})
@@ -181,7 +159,6 @@ export default function AnalysisDetailPage() {
         </div>
       </div>
 
-      {/* Summary */}
       <div className="card">
         <h2 className="text-card-title mb-3">Summary</h2>
         <p
@@ -192,7 +169,6 @@ export default function AnalysisDetailPage() {
         </p>
       </div>
 
-      {/* Underperforming */}
       {suggestions.underperforming_campaigns?.length > 0 && (
         <div className="card">
           <div className="mb-3 flex items-center gap-2">
@@ -221,7 +197,6 @@ export default function AnalysisDetailPage() {
         </div>
       )}
 
-      {/* Optimization suggestions */}
       {suggestions.optimization_suggestions?.length > 0 && (
         <div className="card">
           <div className="mb-3 flex items-center gap-2">
@@ -250,7 +225,6 @@ export default function AnalysisDetailPage() {
         </div>
       )}
 
-      {/* Prioritized actions */}
       {suggestions.prioritized_actions?.length > 0 && (
         <div className="card">
           <div className="mb-3 flex items-center gap-2">

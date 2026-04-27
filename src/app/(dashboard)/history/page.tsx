@@ -1,73 +1,68 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, ChangeEvent, useCallback } from "react";
 import Link from "next/link";
 import { Spinner } from "@heroui/react";
-import { Eye, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import debounce from "lodash.debounce";
 
-interface AnalysisListItem {
-  id: string;
-  campaignIds: string[];
-  summary: string;
-  createdAt: string;
-}
+import {
+  useGetAnalysesQuery,
+  useDeleteAnalysisMutation,
+} from "@/app/services/analysis";
 
 export default function HistoryPage() {
-  const [analyses, setAnalyses] = useState<AnalysisListItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    pageSize: 10,
-    totalPages: 0,
-  });
+  const [localSearch, setLocalSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPagination((prev) => ({ ...prev, page: 1 }));
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [search]);
+  const { data, isLoading } = useGetAnalysesQuery(page, pageSize, search);
+  const deleteMutation = useDeleteAnalysisMutation();
 
-  useEffect(() => {
-    async function fetchAnalyses() {
-      setLoading(true);
-      try {
-        const query = new URLSearchParams({
-          page: pagination.page.toString(),
-          pageSize: pagination.pageSize.toString(),
-          search: debouncedSearch,
-        });
-        const res = await fetch(`/api/analysis?${query}`);
-        if (res.ok) {
-          const result = await res.json();
-          setAnalyses(result.data);
-          setPagination(result.pagination);
-        }
-      } catch {
-        console.error("Failed to fetch analyses");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchAnalyses();
-  }, [pagination.page, pagination.pageSize, debouncedSearch]);
+  const analyses = useMemo(() => {
+    if (!data) return [];
 
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await fetch(`/api/analysis/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setAnalyses((prev) => prev.filter((a) => a.id !== id));
-      }
-    } catch {
-      console.error("Failed to delete analysis");
-    }
+    return data.data;
+  }, [data]);
+  const pagination = useMemo(() => {
+    if (!data)
+      return {
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 0,
+      };
+
+    return data.pagination;
+  }, [data]);
+
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setSearch(value);
+        setPage(1);
+      }, 500),
+    [],
+  );
+
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalSearch(value);
+    debouncedSearch(value);
   };
 
-  if (loading) {
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
+  };
+
+  if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Spinner size="lg" color="current" />
@@ -77,7 +72,6 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page header */}
       <div>
         <h1
           className="text-xl font-bold sm:text-2xl"
@@ -90,7 +84,6 @@ export default function HistoryPage() {
         </p>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-md">
         <Search
           size={16}
@@ -101,19 +94,32 @@ export default function HistoryPage() {
         <input
           type="text"
           placeholder="Search by summary..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="form-input"
-          style={{ paddingLeft: "40px" }}
+          value={localSearch}
+          onChange={handleSearch}
+          className="form-input w-full"
+          style={{ paddingLeft: "40px", paddingRight: localSearch ? "40px" : "12px" }}
           id="history-search"
         />
+        {localSearch && (
+          <button
+            onClick={() => {
+              setLocalSearch("");
+              setSearch("");
+              setPage(1);
+              debouncedSearch.cancel();
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-label hover:text-coral transition-colors cursor-pointer"
+            aria-label="Clear search"
+          >
+            <X size={14} />
+          </button>
+        )}
       </div>
 
-      {/* List */}
       {analyses.length === 0 ? (
         <div className="card py-16 text-center">
           <p style={{ color: "var(--color-text-secondary)" }}>
-            {pagination.total === 0 && !debouncedSearch
+            {!search
               ? "No analyses yet. Select campaigns from the dashboard and click Analyze now."
               : "No results match your search."}
           </p>
@@ -130,7 +136,7 @@ export default function HistoryPage() {
                   day: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
-                }
+                },
               );
               const previewSummary =
                 analysis.summary.length > 120
@@ -185,14 +191,11 @@ export default function HistoryPage() {
             })}
           </div>
 
-          {/* Pagination Controls */}
           {pagination.totalPages > 1 && (
             <div className="mt-4 flex items-center justify-center gap-2">
               <button
                 className="btn-icon"
-                onClick={() =>
-                  setPagination((p) => ({ ...p, page: p.page - 1 }))
-                }
+                onClick={() => setPage((p) => p - 1)}
                 disabled={pagination.page === 1}
                 aria-label="Previous page"
               >
@@ -205,7 +208,7 @@ export default function HistoryPage() {
                     (p) =>
                       p === 1 ||
                       p === pagination.totalPages ||
-                      Math.abs(p - pagination.page) <= 1
+                      Math.abs(p - pagination.page) <= 1,
                   )
                   .map((p, i, arr) => (
                     <div key={p} className="flex items-center gap-1">
@@ -213,9 +216,7 @@ export default function HistoryPage() {
                         <span className="text-label">...</span>
                       )}
                       <button
-                        onClick={() =>
-                          setPagination((prev) => ({ ...prev, page: p }))
-                        }
+                        onClick={() => setPage(p)}
                         className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer ${
                           pagination.page === p
                             ? "bg-coral text-white"
@@ -230,9 +231,7 @@ export default function HistoryPage() {
 
               <button
                 className="btn-icon"
-                onClick={() =>
-                  setPagination((p) => ({ ...p, page: p.page + 1 }))
-                }
+                onClick={() => setPage((p) => p + 1)}
                 disabled={pagination.page === pagination.totalPages}
                 aria-label="Next page"
               >
