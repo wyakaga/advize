@@ -18,6 +18,8 @@ interface CsvRow {
   endDate: string;
 }
 
+import { useCreateCampaignMutation } from "@/app/services/campaigns";
+
 const REQUIRED_COLUMNS = [
   "name",
   "platform",
@@ -36,8 +38,9 @@ export default function UploadCsvPage() {
   const { CSVReader } = useCSVReader();
   const [rows, setRows] = useState<CsvRow[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+
+  const createMutation = useCreateCampaignMutation();
 
   const validateAndSetData = useCallback(
     (results: { data: string[][] }) => {
@@ -111,34 +114,26 @@ export default function UploadCsvPage() {
   );
 
   const handleConfirmUpload = async () => {
-    setUploading(true);
-    try {
-      const payload = rows.map((r) => ({
-        name: r.name,
-        platform: r.platform,
-        impressions: Number(r.impressions) || 0,
-        clicks: Number(r.clicks) || 0,
-        conversions: Number(r.conversions) || 0,
-        cost: Number(r.cost) || 0,
-        startDate: r.startDate,
-        endDate: r.endDate,
-      }));
+    const payload = rows.map((r) => ({
+      name: r.name,
+      platform: r.platform,
+      impressions: Number(r.impressions) || 0,
+      clicks: Number(r.clicks) || 0,
+      conversions: Number(r.conversions) || 0,
+      cost: Number(r.cost) || 0,
+      startDate: r.startDate,
+      endDate: r.endDate,
+    }));
 
-      const res = await fetch("/api/campaigns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      setUploaded(true);
-      setTimeout(() => router.push("/dashboard"), 1500);
-    } catch {
-      setErrors(["Something went wrong. Please try again."]);
-    } finally {
-      setUploading(false);
-    }
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        setUploaded(true);
+        setTimeout(() => router.push("/dashboard"), 1500);
+      },
+      onError: () => {
+        setErrors(["Something went wrong. Please try again."]);
+      },
+    });
   };
 
   const handleDownloadTemplate = () => {
@@ -317,11 +312,11 @@ export default function UploadCsvPage() {
               <button
                 className="btn-primary"
                 onClick={handleConfirmUpload}
-                disabled={uploading}
+                disabled={createMutation.isPending}
                 id="confirm-upload-btn"
               >
-                {uploading ? <Spinner size="sm" /> : null}
-                {uploading
+                {createMutation.isPending ? <Spinner size="sm" /> : null}
+                {createMutation.isPending
                   ? "Uploading..."
                   : `Upload ${rows.length} campaign${rows.length !== 1 ? "s" : ""}`}
               </button>
