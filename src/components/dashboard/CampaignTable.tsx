@@ -8,6 +8,7 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 export interface CampaignRow {
   id: string;
@@ -120,11 +121,11 @@ export function CampaignTable({
         cell: ({ row }) => {
           const start = new Date(row.original.startDate).toLocaleDateString(
             "en-US",
-            { month: "short", day: "numeric" }
+            { month: "short", day: "numeric" },
           );
           const end = new Date(row.original.endDate).toLocaleDateString(
             "en-US",
-            { month: "short", day: "numeric", year: "numeric" }
+            { month: "short", day: "numeric", year: "numeric" },
           );
           return `${start} - ${end}`;
         },
@@ -145,7 +146,7 @@ export function CampaignTable({
         size: 48,
       },
     ],
-    [data, selectedIds, onToggleAll, onToggleSelect, onDelete]
+    [data, selectedIds, onToggleAll, onToggleSelect, onDelete],
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -174,7 +175,7 @@ export function CampaignTable({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </th>
                 ))}
@@ -198,7 +199,10 @@ export function CampaignTable({
                   className="py-12 text-center"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
-                  No campaigns yet. Ready to start?
+                  No campaigns yet.{" "}
+                  <Link href={"/campaigns/new"} className="text-coral">
+                    Ready to start?
+                  </Link>
                 </td>
               </tr>
             )}
@@ -229,23 +233,30 @@ export function CampaignTable({
 
         <div className="flex items-center gap-2">
           <button
-            className="btn-icon"
+            className="btn-icon disabled:cursor-not-allowed disabled:opacity-30"
             onClick={() => onPageChange(pagination.page - 1)}
             disabled={pagination.page === 1}
             aria-label="Previous page"
           >
             <ChevronLeft size={16} />
           </button>
-          
+
           <div className="flex items-center gap-1">
             {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === pagination.totalPages || Math.abs(p - pagination.page) <= 1)
+              .filter(
+                (p) =>
+                  p === 1 ||
+                  p === pagination.totalPages ||
+                  Math.abs(p - pagination.page) <= 1,
+              )
               .map((p, i, arr) => (
                 <div key={p} className="flex items-center gap-1">
-                  {i > 0 && arr[i - 1] !== p - 1 && <span className="text-label">...</span>}
+                  {i > 0 && arr[i - 1] !== p - 1 && (
+                    <span className="text-label">...</span>
+                  )}
                   <button
                     onClick={() => onPageChange(p)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer ${
                       pagination.page === p
                         ? "bg-coral text-white"
                         : "text-text-secondary hover:bg-coral-light hover:text-coral"
@@ -258,7 +269,7 @@ export function CampaignTable({
           </div>
 
           <button
-            className="btn-icon"
+            className="btn-icon disabled:cursor-not-allowed disabled:opacity-30"
             onClick={() => onPageChange(pagination.page + 1)}
             disabled={pagination.page === pagination.totalPages}
             aria-label="Next page"

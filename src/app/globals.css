@@ -134,6 +134,11 @@ body {
   background-color: var(--color-coral-light);
 }
 
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-icon {
   display: inline-flex;
   align-items: center;
@@ -151,6 +156,11 @@ body {
 .btn-icon:hover {
   background-color: #F0EDE6;
   color: var(--color-icon-hover);
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* ========== Cards ========== */
