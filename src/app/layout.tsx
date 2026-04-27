@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
+import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     "Optimize your advertising campaigns with AI-powered insights and actionable recommendations.",
 };
 
-//TODO: add test, tanstack query
+//TODO: add test
 
 export default function RootLayout({
   children,
@@ -29,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`}>
       <body>
-        <Providers>{children}</Providers>
+        <ReactQueryClientProvider>
+          <Providers>{children}</Providers>
+        </ReactQueryClientProvider>
       </body>
     </html>
   );

@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       skip,
       take: pageSize,
+      omit: { userId: true }
     }),
     prisma.campaign.count({
       where: { userId: user.id },
