@@ -183,7 +183,7 @@ export default function DashboardPage() {
           <h2 className="text-card-title">Campaigns</h2>
 
           <button
-            className="btn-primary disabled:cursor-not-allowed disabled:opacity-30"
+            className="btn-primary analyze-button disabled:cursor-not-allowed disabled:opacity-30"
             onClick={handleAnalyze}
             disabled={analyzeMutation.isPending || selectedIds.size === 0}
             id="analyze-now-btn"
@@ -198,23 +198,51 @@ export default function DashboardPage() {
               : `Analyze now (${selectedIds.size})`}
           </button>
         </div>
-        <CampaignTable
-          data={campaigns}
-          selectedIds={selectedIds}
-          onToggleSelect={toggleSelect}
-          onToggleAll={toggleAll}
-          onDelete={handleDelete}
-          search={localSearch}
-          onSearchChange={handleSearchChange}
-          platform={platform}
-          onPlatformChange={handlePlatformChange}
-          pagination={paginationData}
-          onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
-          onPageSizeChange={(pageSize) =>
-            setPagination((prev) => ({ ...prev, pageSize, page: 1 }))
-          }
-        />
+
+        {campaigns.length === 0 ? (
+          <div className="empty-dashboard-state card flex flex-col items-center justify-center py-20 text-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-coral-light text-coral">
+              <Zap size={40} strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-bold">No campaigns yet</h2>
+            <p className="mt-2 max-w-sm text-text-secondary">
+              Upload a CSV from your ad platform or add a campaign manually to start analyzing with AI.
+            </p>
+            <div className="mt-8 flex items-center gap-4">
+              <button
+                onClick={() => router.push("/campaigns/new")}
+                className="btn-primary"
+              >
+                Add Manually
+              </button>
+              <button
+                onClick={() => router.push("/campaigns/upload")}
+                className="btn-secondary"
+              >
+                Upload CSV
+              </button>
+            </div>
+          </div>
+        ) : (
+          <CampaignTable
+            data={campaigns}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onToggleAll={toggleAll}
+            onDelete={handleDelete}
+            search={localSearch}
+            onSearchChange={handleSearchChange}
+            platform={platform}
+            onPlatformChange={handlePlatformChange}
+            pagination={paginationData}
+            onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+            onPageSizeChange={(pageSize) =>
+              setPagination((prev) => ({ ...prev, pageSize, page: 1 }))
+            }
+          />
+        )}
       </div>
+
       <AnalyzeLoadingModal isOpen={isOpen} onOpenChange={setOpen} />
     </div>
   );

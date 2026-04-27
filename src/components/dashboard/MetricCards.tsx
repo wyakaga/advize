@@ -33,7 +33,7 @@ export function MetricCards({ impressions, clicks, conversions, cost }: MetricCa
   const roas = cost > 0 ? ((conversions * 30) / cost).toFixed(2) : "0.00";
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="metrics-card grid grid-cols-2 gap-4 lg:grid-cols-4">
       <MetricCard
         label="Click-Through Rate"
         value={`${ctr}%`}
