@@ -18,19 +18,21 @@ import {
   isToday,
 } from "@internationalized/date";
 
+import { useCreateCampaignMutation } from "@/app/services/campaigns";
+
 const PLATFORMS = ["Facebook", "Google", "TikTok", "LinkedIn"] as const;
 
 export function CampaignForm() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const createMutation = useCreateCampaignMutation();
 
   const now = today(getLocalTimeZone());
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
     setSuccess(false);
 
@@ -54,29 +56,19 @@ export function CampaignForm() {
       !payload.endDate
     ) {
       setError("Please fill in all required fields.");
-      setSaving(false);
       return;
     }
 
-    try {
-      const res = await fetch("/api/campaigns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to save campaign");
-      }
-
-      setSuccess(true);
-      (e.target as HTMLFormElement).reset();
-      setTimeout(() => router.push("/dashboard"), 1500);
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        setSuccess(true);
+        (e.target as HTMLFormElement).reset();
+        setTimeout(() => router.push("/dashboard"), 1500);
+      },
+      onError: () => {
+        setError("Something went wrong. Please try again.");
+      },
+    });
   };
 
   return (
@@ -300,12 +292,12 @@ export function CampaignForm() {
       {/* Submit */}
       <button
         type="submit"
-        className="btn-primary mt-2"
-        disabled={saving}
+        className="btn-primary mt-2 flex items-center justify-center gap-2"
+        disabled={createMutation.isPending}
         id="save-campaign-btn"
       >
-        {saving ? <Spinner size="sm" /> : null}
-        {saving ? "Saving..." : "Save campaign"}
+        {createMutation.isPending ? <Spinner size="sm" /> : null}
+        {createMutation.isPending ? "Saving..." : "Save campaign"}
       </button>
     </form>
   );

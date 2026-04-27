@@ -30,3 +30,14 @@ export interface IGetCampaignsTotals {
   conversions: number;
   cost:        number;
 }
+
+export interface ICreateCampaignPayload {
+  name: string;
+  platform: string;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  cost: number;
+  startDate: string;
+  endDate: string;
+}

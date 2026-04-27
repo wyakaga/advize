@@ -1,4 +1,4 @@
-import { IGetCampaigns } from "@/app/interfaces/campaigns.interface";
+import { ICreateCampaignPayload, IGetCampaigns } from "@/app/interfaces/campaigns.interface";
 import instance from "../axios";
 
 export const getCampaigns = async (page: number = 1, pageSize: number = 10): Promise<IGetCampaigns> => {
@@ -13,4 +13,8 @@ export const getCampaigns = async (page: number = 1, pageSize: number = 10): Pro
 
 export const deleteCampaign = async (id: string): Promise<void> => {
   await instance.delete(`/campaigns?id=${id}`)
+}
+
+export const createCampaign = async (payload: ICreateCampaignPayload | ICreateCampaignPayload[]): Promise<void> => {
+  await instance.post("/campaigns", payload)
 }
