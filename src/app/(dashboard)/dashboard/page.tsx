@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import debounce from "lodash.debounce";
 import { useRouter } from "next/navigation";
 import { Spinner, useOverlayState } from "@heroui/react";
 import { Zap } from "lucide-react";
@@ -21,6 +22,9 @@ export default function DashboardPage() {
   const { isOpen, setOpen } = useOverlayState();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+  const [platform, setPlatform] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
@@ -29,6 +33,8 @@ export default function DashboardPage() {
   const { data, isLoading } = useGetCampaignsQuery(
     pagination.page,
     pagination.pageSize,
+    search,
+    platform,
   );
   const deleteMutation = useDeleteCampaignMutation();
   const analyzeMutation = useAnalyzeCampaignsMutation();
@@ -72,6 +78,31 @@ export default function DashboardPage() {
       })),
     [campaigns],
   );
+
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setSearch(value);
+        setPagination((prev) => ({ ...prev, page: 1 }));
+      }, 500),
+    [],
+  );
+
+  const handleSearchChange = (value: string) => {
+    setLocalSearch(value);
+    debouncedSearch(value);
+  };
+
+  const handlePlatformChange = (value: string) => {
+    setPlatform(value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -173,6 +204,10 @@ export default function DashboardPage() {
           onToggleSelect={toggleSelect}
           onToggleAll={toggleAll}
           onDelete={handleDelete}
+          search={localSearch}
+          onSearchChange={handleSearchChange}
+          platform={platform}
+          onPlatformChange={handlePlatformChange}
           pagination={paginationData}
           onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
           onPageSizeChange={(pageSize) =>

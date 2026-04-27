@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, unauthorized } from "@/lib/session";
+import { parseRobustDate } from "@/lib/date";
 
 // GET /api/campaigns — fetch campaigns with pagination
 export async function GET(req: NextRequest) {
@@ -10,21 +11,31 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const page = parseInt(searchParams.get("page") || "1");
   const pageSize = parseInt(searchParams.get("pageSize") || "10");
+  const search = searchParams.get("search") || "";
+  const platform = searchParams.get("platform") || "";
   const skip = (page - 1) * pageSize;
+
+  const where: any = { userId: user.id };
+  if (search) {
+    where.name = { contains: search, mode: "insensitive" };
+  }
+  if (platform) {
+    where.platform = platform;
+  }
 
   const [campaigns, total, aggregate] = await Promise.all([
     prisma.campaign.findMany({
-      where: { userId: user.id },
+      where,
       orderBy: { createdAt: "desc" },
       skip,
       take: pageSize,
-      omit: { userId: true }
+      omit: { userId: true },
     }),
     prisma.campaign.count({
-      where: { userId: user.id },
+      where,
     }),
     prisma.campaign.aggregate({
-      where: { userId: user.id },
+      where,
       _sum: {
         impressions: true,
         clicks: true,
@@ -61,21 +72,38 @@ export async function POST(req: NextRequest) {
   // Support both single campaign and array of campaigns
   const campaignsData = Array.isArray(body) ? body : [body];
 
-  const created = await prisma.campaign.createMany({
-    data: campaignsData.map((c: Record<string, unknown>) => ({
-      userId: user.id,
-      name: c.name as string,
-      platform: c.platform as string,
-      impressions: Number(c.impressions),
-      clicks: Number(c.clicks),
-      conversions: Number(c.conversions),
-      cost: Number(c.cost),
-      startDate: new Date(c.startDate as string),
-      endDate: new Date(c.endDate as string),
-    })),
-  });
+  try {
+    const created = await prisma.campaign.createMany({
+      data: campaignsData.map((c: Record<string, unknown>) => {
+        const startDate = parseRobustDate(c.startDate as string);
+        const endDate = parseRobustDate(c.endDate as string);
 
-  return NextResponse.json({ count: created.count }, { status: 201 });
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error("Invalid date format provided");
+        }
+
+        return {
+          userId: user.id,
+          name: c.name as string,
+          platform: c.platform as string,
+          impressions: Number(c.impressions),
+          clicks: Number(c.clicks),
+          conversions: Number(c.conversions),
+          cost: Number(c.cost),
+          startDate,
+          endDate,
+        };
+      }),
+    });
+
+    return NextResponse.json({ count: created.count }, { status: 201 });
+  } catch (error: any) {
+    console.error("Campaign creation error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to create campaigns" },
+      { status: 400 }
+    );
+  }
 }
 
 // DELETE /api/campaigns?id=... — delete a campaign
