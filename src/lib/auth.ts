@@ -18,36 +18,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const googleId = account.providerAccountId;
 
       try {
-        await fetch(`${process.env.NEXTAUTH_URL}/api/user-sync`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            googleId,
+        await prisma.user.upsert({
+          where: { googleId },
+          update: {
+            name: user.name ?? undefined,
+            avatar: user.image ?? undefined,
+            email: profile.email,
+          },
+          create: {
             email: profile.email,
             name: user.name ?? null,
             avatar: user.image ?? null,
-          }),
+            googleId,
+          },
         });
         return true;
-      } catch {
-        console.error("Failed to sync user on sign in");
+      } catch (error) {
+        console.error("Failed to sync user on sign in:", error);
         return false;
       }
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
         try {
-          const response = await fetch(`${process.env.NEXTAUTH_URL}/api/user?googleId=${token.sub}`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
+          const dbUser = await prisma.user.findUnique({
+            where: { googleId: token.sub },
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            (session.user as any).id = data.user.id;
+          if (dbUser) {
+            (session.user as any).id = dbUser.id;
           }
         } catch (error) {
-          console.error("Failed to fetch user:", error);
+          console.error("Failed to fetch user for session:", error);
         }
       }
       return session;
