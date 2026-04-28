@@ -31,7 +31,7 @@ export default function OnboardingTour() {
     return () => clearTimeout(mountTimer);
   }, []);
 
-  const steps: Step[] = [
+  const allSteps: Step[] = [
     {
       target: "body",
       content: (
@@ -70,6 +70,18 @@ export default function OnboardingTour() {
     },
   ];
 
+  if (!mounted) return null;
+
+  // Filter steps based on whether the target element exists in the DOM
+  // This ensures the progress counter (e.g. 1 of 5) is always accurate
+  const steps = allSteps.filter((step) => {
+    if (typeof step.target === "string") {
+      if (step.target === "body" || step.placement === "center") return true;
+      return !!document.querySelector(step.target);
+    }
+    return true;
+  });
+
   const handleJoyrideCallback = (data: any) => {
     const { status } = data;
     if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
@@ -77,8 +89,6 @@ export default function OnboardingTour() {
       setRun(false);
     }
   };
-
-  if (!mounted) return null;
 
   return (
     <Joyride
