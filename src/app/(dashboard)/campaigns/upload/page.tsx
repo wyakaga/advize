@@ -89,7 +89,11 @@ export default function UploadCsvPage() {
           validationErrors.push(`Row ${i}: Missing campaign name`);
           continue;
         }
-        if (!VALID_PLATFORMS.includes(platform)) {
+        const matchedPlatform = VALID_PLATFORMS.find(
+          (p) => p.toLowerCase() === platform.toLowerCase()
+        );
+
+        if (!matchedPlatform) {
           validationErrors.push(
             `Row ${i}: Invalid platform "${platform}". Use: ${VALID_PLATFORMS.join(", ")}`
           );
@@ -110,7 +114,7 @@ export default function UploadCsvPage() {
 
         parsed.push({
           name,
-          platform,
+          platform: matchedPlatform,
           impressions,
           clicks,
           conversions,

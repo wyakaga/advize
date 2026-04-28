@@ -150,70 +150,72 @@ export default function HistoryPage() {
                   : analysis.summary;
 
               return (
-                <Link 
-                  key={analysis.id} 
-                  href={`/analysis/${analysis.id}`}
-                  className="card block cursor-pointer transition-shadow hover:shadow-md no-underline"
-                  style={{ color: "inherit" }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-3">
-                        <p className="text-label">{date}</p>
-                        <span
-                          className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
-                          style={{
-                            backgroundColor: "var(--color-coral-light)",
-                            color: "var(--color-coral)",
-                          }}
-                        >
-                          {analysis.campaignIds.length} campaign
-                          {analysis.campaignIds.length !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                      <p
-                        className="mt-2 text-sm leading-relaxed"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        {previewSummary}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 gap-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                      <Dropdown>
-                        <Dropdown.Trigger>
-                          <div
-                            className="btn-icon"
-                            aria-label="Actions"
-                            id={`actions-analysis-${analysis.id}`}
+                <div key={analysis.id} className="relative group">
+                  <Link 
+                    href={`/analysis/${analysis.id}`}
+                    className="card block cursor-pointer transition-shadow hover:shadow-md no-underline"
+                    style={{ color: "inherit" }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-3">
+                          <p className="text-label">{date}</p>
+                          <span
+                            className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
+                            style={{
+                              backgroundColor: "var(--color-coral-light)",
+                              color: "var(--color-coral)",
+                            }}
                           >
-                            <MoreVertical size={16} strokeWidth={1.5} />
-                          </div>
-                        </Dropdown.Trigger>
-                        <Dropdown.Popover>
-                          <Dropdown.Menu aria-label="Analysis Actions">
-                            <Dropdown.Item
-                              key="delete"
-                              id={`delete-analysis-${analysis.id}`}
-                              textValue="Delete"
-                              variant="danger"
-                              onPress={() => handleDelete(analysis.id)}
-                              isDisabled={deleteMutation.isPending && deleteMutation.variables === analysis.id}
-                            >
-                              <div className="flex items-center gap-2 text-danger">
-                                {deleteMutation.isPending && deleteMutation.variables === analysis.id ? (
-                                  <Spinner size="sm" color="danger" />
-                                ) : (
-                                  <Trash2 size={16} />
-                                )}
-                                Delete
-                              </div>
-                            </Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown.Popover>
-                      </Dropdown>
+                            {analysis.campaignIds.length} campaign
+                            {analysis.campaignIds.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        <p
+                          className="mt-2 text-sm leading-relaxed pr-8"
+                          style={{ color: "var(--color-text-primary)" }}
+                        >
+                          {previewSummary}
+                        </p>
+                      </div>
                     </div>
+                  </Link>
+
+                  <div className="absolute right-4 top-4 z-10">
+                    <Dropdown>
+                      <Dropdown.Trigger>
+                        <div
+                          className="btn-icon"
+                          aria-label="Actions"
+                          id={`actions-analysis-${analysis.id}`}
+                        >
+                          <MoreVertical size={16} strokeWidth={1.5} />
+                        </div>
+                      </Dropdown.Trigger>
+                      <Dropdown.Popover>
+                        <Dropdown.Menu aria-label="Analysis Actions">
+                          <Dropdown.Item
+                            key="delete"
+                            id={`delete-analysis-${analysis.id}`}
+                            textValue="Delete"
+                            variant="danger"
+                            onPress={() => handleDelete(analysis.id)}
+                            isDisabled={deleteMutation.isPending && deleteMutation.variables === analysis.id}
+                          >
+                            <div className="flex items-center gap-2 text-danger">
+                              {deleteMutation.isPending && deleteMutation.variables === analysis.id ? (
+                                <Spinner size="sm" color="danger" />
+                              ) : (
+                                <Trash2 size={16} />
+                              )}
+                              Delete
+                            </div>
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown.Popover>
+                    </Dropdown>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
