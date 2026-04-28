@@ -30,6 +30,7 @@ model Campaign {
   cost        Float
   startDate   DateTime
   endDate     DateTime
+  deletedAt   DateTime?
   createdAt   DateTime @default(now())
 
   @@index([userId])
@@ -43,6 +44,7 @@ model Analysis {
   summary      String
   fullResponse String
   suggestions  Json
+  deletedAt    DateTime?
   createdAt    DateTime @default(now())
 
   @@index([userId])

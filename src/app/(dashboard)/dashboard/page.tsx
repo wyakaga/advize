@@ -5,6 +5,7 @@ import debounce from "lodash.debounce";
 import { useRouter } from "next/navigation";
 import { Spinner, useOverlayState } from "@heroui/react";
 import { Zap } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { MetricCards } from "@/components/dashboard/MetricCards";
 import { MetricsChart } from "@/components/dashboard/MetricsChart";
@@ -20,6 +21,13 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const { isOpen, setOpen } = useOverlayState();
+  const {
+    isOpen: isDeleteModalOpen,
+    setOpen: setDeleteModalOpen,
+    close: closeDeleteModal,
+  } = useOverlayState();
+
+  const queryClient = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
@@ -30,7 +38,7 @@ export default function DashboardPage() {
     pageSize: 10,
   });
 
-  const { data, isLoading } = useGetCampaignsQuery(
+  const { data, isLoading, isFetching } = useGetCampaignsQuery(
     pagination.page,
     pagination.pageSize,
     search,
@@ -127,11 +135,13 @@ export default function DashboardPage() {
   const handleDelete = async (id: string) => {
     deleteMutation.mutate(id, {
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["campaigns"] });
         setSelectedIds((prev) => {
           const next = new Set(prev);
           next.delete(id);
           return next;
         });
+        closeDeleteModal();
       },
     });
   };
@@ -199,14 +209,15 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {campaigns.length === 0 ? (
+        {campaigns.length === 0 && !localSearch && !search && !platform && !isFetching ? (
           <div className="empty-dashboard-state card flex flex-col items-center justify-center py-20 text-center">
             <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-coral-light text-coral">
               <Zap size={40} strokeWidth={1.5} />
             </div>
             <h2 className="text-xl font-bold">No campaigns yet</h2>
             <p className="mt-2 max-w-sm text-text-secondary">
-              Upload a CSV from your ad platform or add a campaign manually to start analyzing with AI.
+              Upload a CSV from your ad platform or add a campaign manually to
+              start analyzing with AI.
             </p>
             <div className="mt-8 flex items-center gap-4">
               <button
@@ -235,10 +246,15 @@ export default function DashboardPage() {
             platform={platform}
             onPlatformChange={handlePlatformChange}
             pagination={paginationData}
-            onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+            onPageChange={(page) =>
+              setPagination((prev) => ({ ...prev, page }))
+            }
             onPageSizeChange={(pageSize) =>
               setPagination((prev) => ({ ...prev, pageSize, page: 1 }))
             }
+            isDeleteModalOpen={isDeleteModalOpen}
+            onDeleteModalOpenChange={setDeleteModalOpen}
+            isFilteredState={!!(search || platform || isFetching)}
           />
         )}
       </div>
