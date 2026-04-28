@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  avatar    String?
+  googleId  String     @unique
+  createdAt DateTime   @default(now())
+  campaigns Campaign[]
+  analyses  Analysis[]
+}
+
+model Campaign {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  platform    String
+  impressions Int
+  clicks      Int
+  conversions Int
+  cost        Float
+  startDate   DateTime
+  endDate     DateTime
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Analysis {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignIds  String[]
+  summary      String
+  fullResponse String
+  suggestions  Json
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+}

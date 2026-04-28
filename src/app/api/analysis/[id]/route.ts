@@ -45,7 +45,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
   }
 
-  await prisma.analysis.delete({ where: { id } });
+  await prisma.analysis.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
 
   return NextResponse.json({ deleted: true });
 }

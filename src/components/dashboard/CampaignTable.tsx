@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { Trash2, ChevronLeft, ChevronRight, Search, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import DeleteCampaignModal from "./DeleteCampaignModal";
 
 const PLATFORMS = ["Facebook", "Google", "TikTok", "LinkedIn"] as const;
 
@@ -42,6 +43,9 @@ interface CampaignTableProps {
   };
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  isDeleteModalOpen: boolean
+  onDeleteModalOpenChange: (isOpen: boolean) => void;
+  isFilteredState?: boolean;
 }
 
 export function CampaignTable({
@@ -57,9 +61,19 @@ export function CampaignTable({
   pagination,
   onPageChange,
   onPageSizeChange,
+  isDeleteModalOpen,
+  onDeleteModalOpenChange,
+  isFilteredState,
 }: CampaignTableProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
+
+  const handleDeleteConfirm = () => {
+    if (campaignToDelete) {
+      onDelete(campaignToDelete);
+    }
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -162,7 +176,10 @@ export function CampaignTable({
         cell: ({ row }) => (
           <button
             className="btn-icon"
-            onClick={() => onDelete(row.original.id)}
+            onClick={() => {
+              setCampaignToDelete(row.original.id);
+              onDeleteModalOpenChange(true);
+            }}
             aria-label={`Delete ${row.original.name}`}
             id={`delete-campaign-${row.original.id}`}
           >
@@ -305,10 +322,16 @@ export function CampaignTable({
                   className="py-12 text-center"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
-                  No campaigns yet.{" "}
-                  <Link href={"/campaigns/new"} className="text-coral">
-                    Ready to start?
-                  </Link>
+                  {isFilteredState ?? (search || platform) ? (
+                    "No campaigns found matching your filters."
+                  ) : (
+                    <>
+                      No campaigns yet.{" "}
+                      <Link href={"/campaigns/new"} className="text-coral">
+                        Ready to start?
+                      </Link>
+                    </>
+                  )}
                 </td>
               </tr>
             )}
@@ -383,6 +406,12 @@ export function CampaignTable({
           </button>
         </div>
       </div>
+
+      <DeleteCampaignModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={onDeleteModalOpenChange}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

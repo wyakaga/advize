@@ -15,19 +15,6 @@ import {
 // We will import @react-pdf/renderer dynamically inside the export function to avoid SSR/React 19 issues during initial render
 import { PdfDocument } from "@/components/analysis/PdfDocument";
 
-interface AnalysisData {
-  id: string;
-  summary: string;
-  suggestions: {
-    summary: string;
-    underperforming_campaigns: string[];
-    optimization_suggestions: string[];
-    prioritized_actions: string[];
-  };
-  createdAt: string;
-  campaigns: Array<{ id: string; name: string; platform: string }>;
-}
-
 import { useGetAnalysisQuery } from "@/app/services/analysis";
 
 export default function AnalysisDetailPage() {

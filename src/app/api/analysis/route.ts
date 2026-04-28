@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, unauthorized } from "@/lib/session";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/analysis — list analyses with pagination and search
 export async function GET(req: NextRequest) {
   const user = await getSessionUser();
@@ -15,6 +17,7 @@ export async function GET(req: NextRequest) {
 
   const where = {
     userId: user.id,
+    deletedAt: null,
     ...(search
       ? {
           summary: {
@@ -41,13 +44,20 @@ export async function GET(req: NextRequest) {
     prisma.analysis.count({ where }),
   ]);
 
-  return NextResponse.json({
-    data: analyses,
-    pagination: {
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
+  return NextResponse.json(
+    {
+      data: analyses,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    }
+  );
 }

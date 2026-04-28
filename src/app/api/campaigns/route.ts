@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, unauthorized } from "@/lib/session";
 import { parseRobustDate } from "@/lib/date";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/campaigns — fetch campaigns with pagination
 export async function GET(req: NextRequest) {
   const user = await getSessionUser();
@@ -15,7 +17,7 @@ export async function GET(req: NextRequest) {
   const platform = searchParams.get("platform") || "";
   const skip = (page - 1) * pageSize;
 
-  const where: any = { userId: user.id };
+  const where: any = { userId: user.id, deletedAt: null };
   if (search) {
     where.name = { contains: search, mode: "insensitive" };
   }
@@ -125,7 +127,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 
-  await prisma.campaign.delete({ where: { id } });
+  await prisma.campaign.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
 
   return NextResponse.json({ deleted: true });
 }

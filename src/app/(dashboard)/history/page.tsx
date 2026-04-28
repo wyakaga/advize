@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useMemo, ChangeEvent, useCallback } from "react";
 import Link from "next/link";
-import { Spinner } from "@heroui/react";
-import { Eye, Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Spinner, Dropdown } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Trash2, Search, ChevronLeft, ChevronRight, X, MoreVertical } from "lucide-react";
 import debounce from "lodash.debounce";
 
 import {
@@ -18,6 +19,7 @@ export default function HistoryPage() {
   const pageSize = 10;
 
   const { data, isLoading } = useGetAnalysesQuery(page, pageSize, search);
+  const queryClient = useQueryClient();
   const deleteMutation = useDeleteAnalysisMutation();
 
   const analyses = useMemo(() => {
@@ -59,7 +61,11 @@ export default function HistoryPage() {
   }, [debouncedSearch]);
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["analyses"] });
+      },
+    });
   };
 
   if (isLoading) {
@@ -144,7 +150,12 @@ export default function HistoryPage() {
                   : analysis.summary;
 
               return (
-                <div key={analysis.id} className="card">
+                <Link 
+                  key={analysis.id} 
+                  href={`/analysis/${analysis.id}`}
+                  className="card block cursor-pointer transition-shadow hover:shadow-md no-underline"
+                  style={{ color: "inherit" }}
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-3">
@@ -167,26 +178,42 @@ export default function HistoryPage() {
                         {previewSummary}
                       </p>
                     </div>
-                    <div className="flex shrink-0 gap-1">
-                      <Link
-                        href={`/analysis/${analysis.id}`}
-                        className="btn-icon"
-                        aria-label="View analysis"
-                        id={`view-analysis-${analysis.id}`}
-                      >
-                        <Eye size={16} strokeWidth={1.5} />
-                      </Link>
-                      <button
-                        className="btn-icon"
-                        onClick={() => handleDelete(analysis.id)}
-                        aria-label="Delete analysis"
-                        id={`delete-analysis-${analysis.id}`}
-                      >
-                        <Trash2 size={16} strokeWidth={1.5} />
-                      </button>
+                    <div className="flex shrink-0 gap-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                      <Dropdown>
+                        <Dropdown.Trigger>
+                          <div
+                            className="btn-icon"
+                            aria-label="Actions"
+                            id={`actions-analysis-${analysis.id}`}
+                          >
+                            <MoreVertical size={16} strokeWidth={1.5} />
+                          </div>
+                        </Dropdown.Trigger>
+                        <Dropdown.Popover>
+                          <Dropdown.Menu aria-label="Analysis Actions">
+                            <Dropdown.Item
+                              key="delete"
+                              id={`delete-analysis-${analysis.id}`}
+                              textValue="Delete"
+                              variant="danger"
+                              onPress={() => handleDelete(analysis.id)}
+                              isDisabled={deleteMutation.isPending && deleteMutation.variables === analysis.id}
+                            >
+                              <div className="flex items-center gap-2 text-danger">
+                                {deleteMutation.isPending && deleteMutation.variables === analysis.id ? (
+                                  <Spinner size="sm" color="danger" />
+                                ) : (
+                                  <Trash2 size={16} />
+                                )}
+                                Delete
+                              </div>
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown.Popover>
+                      </Dropdown>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
